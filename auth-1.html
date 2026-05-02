@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#010D18"/>
+<title>AQUATRAITE — Connexion · Congo</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --bg:#030B12; --bg2:#060F1A; --border:rgba(0,210,255,.10);
+  --border2:rgba(0,210,255,.28); --cyan:#00C8F0; --mint:#00E87A;
+  --red:#FF2D55; --text:#ECF5FA; --text2:#6EA8C0; --text3:#3D7A95;
+  --font:'DM Sans',sans-serif; --mono:'JetBrains Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 10%,rgba(0,200,240,.06) 0%,transparent 65%),
+    radial-gradient(ellipse 50% 50% at 85% 85%,rgba(0,232,122,.04) 0%,transparent 65%),
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,200,240,.012) 2px,rgba(0,200,240,.012) 4px);
+  animation:scanMove 10s linear infinite;
+}
+@keyframes scanMove{from{background-position:0 0,0 0,0 0}to{background-position:0 0,0 0,0 -40px}}
+
+.shell{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px}
+
+.logo-zone{text-align:center;margin-bottom:36px;animation:fadeDown .6s ease both}
+.logo-icon{
+  width:64px;height:64px;background:linear-gradient(135deg,var(--cyan),#00E87A);
+  border-radius:16px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:30px;margin-bottom:14px;animation:iconPulse 4s ease-in-out infinite;
+  box-shadow:0 0 40px rgba(0,200,240,.22);
+}
+@keyframes iconPulse{0%,100%{box-shadow:0 0 32px rgba(0,200,240,.22)}50%{box-shadow:0 0 56px rgba(0,200,240,.35)}}
+.logo-name{font-family:var(--display);font-size:38px;letter-spacing:5px;line-height:1}
+.logo-sub{font-size:11px;color:var(--text3);letter-spacing:2.5px;text-transform:uppercase;margin-top:4px}
+.logo-bar{width:48px;height:2px;background:linear-gradient(90deg,var(--cyan),var(--mint));margin:10px auto 0;border-radius:2px}
+
+.card{
+  width:100%;max-width:440px;
+  background:rgba(6,15,26,.96);
+  border:1px solid var(--border2);border-radius:12px;
+  padding:32px 28px;
+  box-shadow:0 8px 48px rgba(0,0,0,.7);
+  animation:fadeUp .5s ease .1s both;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--mint),var(--cyan));
+  background-size:200% 100%;animation:shimmer 3s linear infinite;
+}
+@keyframes shimmer{from{background-position:0 0}to{background-position:200% 0}}
+
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:4px;margin-bottom:28px}
+.tab{flex:1;padding:9px 0;font-size:13px;font-weight:600;letter-spacing:.5px;border-radius:6px;border:none;background:none;color:var(--text3);cursor:pointer;transition:.2s;font-family:var(--font)}
+.tab.active{background:linear-gradient(135deg,rgba(0,200,240,.15),rgba(0,232,122,.08));color:var(--cyan);border:1px solid rgba(0,200,240,.2)}
+.tab:hover:not(.active){color:var(--text2)}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.field input,.field select{
+  width:100%;padding:11px 14px;background:rgba(0,0,0,.4);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;transition:.2s;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,200,240,.10);background:rgba(0,0,0,.55)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:#0A1825;color:var(--text)}
+
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:44px}
+.pass-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px;transition:.15s}
+.pass-toggle:hover{color:var(--cyan)}
+
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.role-btn{
+  padding:10px 8px;background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:.2s;text-align:center;font-family:var(--font);
+}
+.role-btn .ri{font-size:18px;display:block;margin-bottom:3px}
+.role-btn.selected{border-color:var(--cyan);background:rgba(0,200,240,.10);color:var(--cyan)}
+.role-btn:hover:not(.selected){border-color:var(--border2);color:var(--text)}
+
+.fsect{
+  font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.fsect::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.btn{
+  width:100%;padding:13px;border-radius:9px;border:1px solid rgba(0,200,240,.35);
+  background:linear-gradient(135deg,rgba(0,200,240,.18),rgba(0,232,122,.12));
+  color:var(--cyan);font-family:var(--font);font-size:14px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:.2s;margin-top:8px;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,200,240,.18)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;border-color:var(--border);color:var(--text3);margin-top:8px}
+.btn.ghost:hover{border-color:var(--border2);color:var(--text2);transform:none;box-shadow:none}
+.btn.green{background:rgba(0,232,122,.08);border-color:rgba(0,232,122,.25);color:var(--mint)}
+
+.msg{padding:11px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;animation:fadeIn .25s ease}
+.msg.error{background:rgba(255,45,85,.10);border:1px solid rgba(255,45,85,.25);color:#FF6B8A;display:block}
+.msg.success{background:rgba(0,232,122,.10);border:1px solid rgba(0,232,122,.25);color:var(--mint);display:block}
+.msg.info{background:rgba(0,200,240,.08);border:1px solid rgba(0,200,240,.20);color:var(--cyan);display:block}
+
+.loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,200,240,.3);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.footer-info{margin-top:24px;text-align:center;font-size:11px;color:var(--text3);animation:fadeIn .6s ease .3s both;letter-spacing:.5px}
+.footer-info span{color:var(--text2)}
+.version-badge{position:fixed;bottom:16px;right:16px;font-family:var(--mono);font-size:10px;color:var(--text3);background:rgba(6,15,26,.8);border:1px solid var(--border);padding:4px 10px;border-radius:20px;letter-spacing:1px}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:480px){.card{padding:24px 18px}.logo-name{font-size:30px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="logo-zone">
+    <div class="logo-icon">💧</div>
+    <div class="logo-name">AQUATRAITE</div>
+    <div class="logo-sub">Plateforme Nationale · République du Congo</div>
+    <div class="logo-bar"></div>
+  </div>
+
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-login"    onclick="switchTab('login')"    role="tab">Connexion</button>
+      <button class="tab"        id="tab-register" onclick="switchTab('register')" role="tab">Inscription</button>
+      <button class="tab"        id="tab-reset"    onclick="switchTab('reset')"    role="tab">Mot de passe</button>
+    </div>
+
+    <div class="msg" id="authMsg" role="alert" aria-live="polite"></div>
+
+    <!-- LOGIN -->
+    <div class="panel active" id="panel-login">
+      <div class="field">
+        <label for="loginEmail">Adresse e-mail</label>
+        <input type="email" id="loginEmail" placeholder="agent@aquatraite.cg" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label for="loginPass">Mot de passe</label>
+        <div class="pass-wrap">
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="pass-toggle" onclick="togglePass('loginPass',this)" type="button">👁</button>
+        </div>
+      </div>
+      <button class="btn" id="btnLogin" onclick="doLogin()">Accéder à la plateforme</button>
+      <div class="divider">ou</div>
+      <button class="btn green" onclick="switchTab('reset')">Mot de passe oublié ?</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="panel" id="panel-register">
+      <div class="field">
+        <label for="regName">Nom complet</label>
+        <input type="text" id="regName" placeholder="Jean Mbemba" autocomplete="name"/>
+      </div>
+      <div class="field">
+        <label for="regEmail">Adresse e-mail</label>
+        <input type="email" id="regEmail" placeholder="agent@aquatraite.cg" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label for="regPass">Mot de passe <span style="color:var(--text3);font-weight:400">(min. 8 caractères)</span></label>
+        <div class="pass-wrap">
+          <input type="password" id="regPass" placeholder="••••••••" autocomplete="new-password"/>
+          <button class="pass-toggle" onclick="togglePass('regPass',this)" type="button">👁</button>
+        </div>
+      </div>
+      <div class="fsect">Rôle dans le système</div>
+      <div class="role-grid" id="roleGrid">
+        <button class="role-btn" data-role="terrain"  onclick="selectRole(this)"><span class="ri">🌿</span>Agent Terrain</button>
+        <button class="role-btn" data-role="analyste" onclick="selectRole(this)"><span class="ri">🔬</span>Analyste</button>
+        <button class="role-btn" data-role="lecteur"  onclick="selectRole(this)"><span class="ri">👁️</span>Lecteur</button>
+        <button class="role-btn" data-role="admin"    onclick="selectRole(this)"><span class="ri">🔑</span>Administrateur</button>
+      </div>
+      <input type="hidden" id="selectedRole" value=""/>
+      <div class="field">
+        <label for="regOrg">Organisation <span style="color:var(--text3);font-weight:400">(optionnel)</span></label>
+        <input type="text" id="regOrg" placeholder="SNDE, UNICEF, Mairie…" autocomplete="organization"/>
+      </div>
+      <button class="btn" id="btnRegister" onclick="doRegister()">Créer mon compte</button>
+    </div>
+
+    <!-- RESET -->
+    <div class="panel" id="panel-reset">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6">
+        Entre ton adresse e-mail. Tu recevras un lien pour réinitialiser ton mot de passe.
+      </p>
+      <div class="field">
+        <label for="resetEmail">Adresse e-mail</label>
+        <input type="email" id="resetEmail" placeholder="agent@aquatraite.cg" autocomplete="email"/>
+      </div>
+      <button class="btn" id="btnReset" onclick="doReset()">Envoyer le lien</button>
+      <div class="divider">ou</div>
+      <button class="btn ghost" onclick="switchTab('login')">← Retour à la connexion</button>
+    </div>
+  </div>
+
+  <div class="footer-info">
+    Plateforme sécurisée · <span>AquaTraite v5.0</span> · 🔒 Chiffrement SSL
+  </div>
+</div>
+
+<div class="version-badge">AUTH v1.0</div>
+
+<script src="supabase-config.js"></script>
+<script>
+// ── Init Supabase ──
+const { createClient } = supabase;
+let sb;
+try {
+  sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+} catch(e) {
+  showMsg('⚠️ Modifie supabase-config.js avec ton URL et ta clé API.', 'error');
+}
+
+// ── Session existante → redirection directe ──
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!sb) return;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) redirectToPlatform(session);
+  } catch(e) {}
+});
+
+// ── Tabs ──
+function switchTab(tab) {
+  ['login','register','reset'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+  });
+  clearMsg();
+}
+
+// ── Messages ──
+function showMsg(text, type='error') {
+  const el = document.getElementById('authMsg');
+  el.textContent = text; el.className = 'msg ' + type;
+}
+function clearMsg() {
+  const el = document.getElementById('authMsg');
+  el.className = 'msg'; el.textContent = '';
+}
+
+// ── Mot de passe visible/masqué ──
+function togglePass(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+// ── Sélection rôle ──
+function selectRole(btn) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('selectedRole').value = btn.dataset.role;
+}
+
+// ── Loader helper ──
+function setLoading(btnId, label, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="loader"></span>${label}` : label;
+}
+
+// ══ CONNEXION ══
+async function doLogin() {
+  if (!sb) return showMsg('Configuration Supabase manquante — modifie supabase-config.js', 'error');
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) return showMsg('⚠️ Remplis tous les champs.', 'error');
+  if (!email.includes('@')) return showMsg('⚠️ Adresse e-mail invalide.', 'error');
+
+  setLoading('btnLogin', 'Accéder à la plateforme', true);
+  clearMsg();
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      const m = {
+        'Invalid login credentials': '❌ E-mail ou mot de passe incorrect.',
+        'Email not confirmed': '📧 Confirme ton e-mail avant de te connecter.',
+        'Too many requests': '⏳ Trop de tentatives. Attends quelques minutes.',
+      };
+      showMsg(m[error.message] || '❌ ' + error.message, 'error');
+    } else {
+      showMsg('✅ Connexion réussie ! Redirection…', 'success');
+      setTimeout(() => redirectToPlatform(data.session), 800);
+    }
+  } catch(e) { showMsg('❌ Erreur réseau. Vérifie ta connexion.', 'error'); }
+  setLoading('btnLogin', 'Accéder à la plateforme', false);
+}
+
+// ══ INSCRIPTION ══
+async function doRegister() {
+  if (!sb) return showMsg('Configuration Supabase manquante.', 'error');
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  const role  = document.getElementById('selectedRole').value;
+  const org   = document.getElementById('regOrg').value.trim();
+
+  if (!name || !email || !pass) return showMsg('⚠️ Remplis tous les champs obligatoires.', 'error');
+  if (!email.includes('@'))     return showMsg('⚠️ Adresse e-mail invalide.', 'error');
+  if (pass.length < 8)          return showMsg('⚠️ Mot de passe trop court (min. 8 caractères).', 'error');
+  if (!role)                    return showMsg('⚠️ Sélectionne un rôle.', 'error');
+
+  setLoading('btnRegister', 'Créer mon compte', true);
+  clearMsg();
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: name, role, organisation: org } }
+    });
+    if (error) {
+      const m = { 'User already registered': '⚠️ Un compte existe déjà avec cet e-mail.' };
+      showMsg(m[error.message] || '❌ ' + error.message, 'error');
+    } else if (data.user && !data.session) {
+      showMsg('📧 Compte créé ! Vérifie ta boîte e-mail pour confirmer.', 'success');
+    } else if (data.session) {
+      showMsg('✅ Compte créé et connecté ! Redirection…', 'success');
+      setTimeout(() => redirectToPlatform(data.session), 800);
+    }
+  } catch(e) { showMsg('❌ Erreur réseau.', 'error'); }
+  setLoading('btnRegister', 'Créer mon compte', false);
+}
+
+// ══ RÉINITIALISATION ══
+async function doReset() {
+  if (!sb) return showMsg('Configuration Supabase manquante.', 'error');
+  const email = document.getElementById('resetEmail').value.trim();
+  if (!email || !email.includes('@')) return showMsg('⚠️ Adresse e-mail invalide.', 'error');
+
+  setLoading('btnReset', 'Envoyer le lien', true);
+  clearMsg();
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/auth.html',
+    });
+    if (error) showMsg('❌ ' + error.message, 'error');
+    else showMsg('📧 Lien envoyé ! Vérifie ta boîte e-mail.', 'success');
+  } catch(e) { showMsg('❌ Erreur réseau.', 'error'); }
+  setLoading('btnReset', 'Envoyer le lien', false);
+}
+
+// ══ REDIRECTION ══
+// On stocke la session dans sessionStorage (same-origin uniquement)
+// La plateforme principale lira ces données au chargement
+function redirectToPlatform(session) {
+  sessionStorage.setItem('aq_user', JSON.stringify({
+    id:    session.user.id,
+    email: session.user.email,
+    name:  session.user.user_metadata?.full_name || session.user.email,
+    role:  session.user.user_metadata?.role || 'lecteur',
+    org:   session.user.user_metadata?.organisation || '',
+    token: session.access_token,
+  }));
+  window.location.href = 'aquatraite-v5.html';
+}
+
+// ── Enter pour soumettre ──
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const panel = document.querySelector('.panel.active')?.id;
+  if (panel === 'panel-login')    doLogin();
+  if (panel === 'panel-register') doRegister();
+  if (panel === 'panel-reset')    doReset();
+});
+</script>
+</body>
+</html>
